@@ -38,7 +38,7 @@ function my_pseudo_alert (text) {
 	gui_write_modal_box(html);
 }
 
-function player (name, bankroll, carda, cardb, status, total_bet, subtotal_bet) {
+function player(name, bankroll, carda, cardb, status, total_bet, subtotal_bet) {
 	this.name = name;
 	this.bankroll = bankroll;
 	this.carda = carda;
@@ -718,8 +718,13 @@ function handle_end_of_round () {
 	detail = " (<a href='javascript:alert(\"" + detail + "\")'>details</a>)";
 
 	var quit_text = "Restart";
-	var quit_func = new_game;
-	var continue_text = "Go on";
+	var quit_func = function() {
+		var r = confirm("Restart the Game ?");
+		if(r === true) {
+			new_game();
+		}
+	};
+	var continue_text = 'Continue'; //"Go on";
 	var continue_func = new_round;
 
 	if (players[0].status == "BUST" && !human_loses) {
@@ -754,10 +759,7 @@ function handle_end_of_round () {
 						 winner_text + "</b></font>" + detail + "<br>";
 	gui_write_game_response(html);
 
-	gui_setup_fold_call_click(quit_text,
-														continue_text,
-														quit_func,
-														continue_func);
+	gui_setup_fold_call_click(quit_text, continue_text, quit_func, continue_func);
 
 	var elapsed_milliseconds = ((new Date()) - START_DATE);
 	var elapsed_time = makeTimeString(elapsed_milliseconds);
@@ -772,7 +774,7 @@ function handle_end_of_round () {
 			var end_msg = "GAME OVER!";
 			var over_ending = NUM_ROUNDS == 1 ? "1 deal." : NUM_ROUNDS + " deals.";
 			if (has_money(0)) {
-				end_msg += "\n\nYOU WIN " + players[0].name.toUpperCase() + "!!!";
+				end_msg += "\n\nYOU WIN" + (players[0].name.toUpperCase() !== 'YOU' ? ' (' + players[0].name.toUpperCase() + ') ' : ' ') + "!!!";
 			} else {
 				end_msg += "\n\nSorry, you lost.";
 			}
@@ -936,8 +938,11 @@ function human_fold () {
 function bet_from_bot (x) {
 	var b = 0;
 	var n = current_bet_amount - players[x].subtotal_bet;
-	if (!board[0]) b = bot_get_preflop_bet();
-	else b = bot_get_postflop_bet();
+	if(!board[0]) {
+		b = bot_get_preflop_bet();
+	} else {
+		b = bot_get_postflop_bet();
+	}
 	if (b >= players[x].bankroll) { // ALL IN
 		players[x].status = "";
 	} else if (b < n) { // BET 2 SMALL
